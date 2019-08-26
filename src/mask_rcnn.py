@@ -5,6 +5,9 @@ import os.path
 import sys
 import random
 
+import wget
+import tarfile
+
 # Initialize the parameters
 confThreshold = 0.5  # Confidence threshold
 maskThreshold = 0.3  # Mask threshold
@@ -229,26 +232,38 @@ def postprocess(boxes, masks, imghsv, flow, gray):
             drawBox(frame, classId, score, left, top, right, bottom, classMask, imghsv, flow, gray)
 
 
-# Load names of classes
-classesFile = "mscoco_labels.names";
+##### SCRIPT INIT #####
+
+# Download and extract weight files from Mask-RCNN on Coco
+weight_url = 'http://download.tensorflow.org/models/object_detection/mask_rcnn_inception_v2_coco_2018_01_28.tar.gz'
+weights_file = wget.download(weight_url)
+
+tar = tarfile.open(weights_file)
+tar.extractall(path='../model/')
+
+# Load names from all classes
+classes_filename= "mscoco_labels.names";
 classes = None
-with open(classesFile, 'rt') as f:
+
+with open(classes_filename, 'rt') as f:
    classes = f.read().rstrip('\n').split('\n')
 
-# Give the textGraph and weight files for the model
-textGraph = "./mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
-modelWeights = "./mask_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.pb";
+# Store the textGraph and weight files for the model
+text_graph = "../model/mask_rcnn_inception_v2_coco_2018_01_28.pbtxt";
+model_weights = "../model/mask_rcnn_inception_v2_coco_2018_01_28/frozen_inference_graph.pb";
 
-# Load the network
-net = cv.dnn.readNetFromTensorflow(modelWeights, textGraph);
+# Load the network from Tensorflow Model
+net = cv.dnn.readNetFromTensorflow(model_weights, text_graph);
 net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
 net.setPreferableTarget(cv.dnn.DNN_TARGET_OPENCL)
 
-# Load the classes
-colorsFile = "colors.txt";
-with open(colorsFile, 'rt') as f:
+# Load the classes colors used for segmentation
+colors_file = "colors.txt";
+with open(colors_file, 'rt') as f:
     colorsStr = f.read().rstrip('\n').split('\n')
-colors = [] #[0,0,0]
+
+colors = [] # [0,0,0]
+
 for i in range(len(colorsStr)):
     rgb = colorsStr[i].split(' ')
     color = np.array([float(rgb[0]), float(rgb[1]), float(rgb[2])])
@@ -273,41 +288,42 @@ elif (args.video):
     cap = cv.VideoCapture(args.video)
     outputFile = args.video[:-4]+'_mask_rcnn_out_py.avi'
 else:
-    # Webcam input
-    #cap = cv.VideoCapture(0)
-    #cap = cv.VideoCapture("KITTI_Germany/City/City/2011_09_26_6/image_02/data/%10d.png")
-    cap = cv.VideoCapture("CARINA_Brasil/Easy/easy_stereo_narrow_left/easy4_stereo_narrow_left/%09d.png")
+    # cap = cv.VideoCapture("KITTI_Germany/City/City/2011_09_26_6/image_02/data/%10d.png")
+
+    cap = cv.VideoCapture(0) # Internal Camera input
+
     outputFile = 'result.avi'
-    capDisparity = cv.VideoCapture("MDHOT.avi") #Get the disparitymap frames (or video)
+    capDisparity = cv.VideoCapture("MDHOT.avi") # Get disparitymap frames (or video) input
 
 # Get the video writer initialized to save the output video
 if (not args.image):
-    vid_writer = cv.VideoWriter(outputFile, cv.VideoWriter_fourcc('M','J','P','G'), 15, (round(cap.get(cv.CAP_PROP_FRAME_WIDTH)),round(cap.get(cv.CAP_PROP_FRAME_HEIGHT))))
+    vid_writer = cv.VideoWriter(outputFile,
+                                cv.VideoWriter_fourcc('M','J','P','G'),
+                                15,
+                                (round(cap.get(cv.CAP_PROP_FRAME_WIDTH)),round(cap.get(cv.CAP_PROP_FRAME_HEIGHT))))
 
-width = cap.get(3) #P/ OF
-height = cap.get(4) #P/ OF
+width = cap.get(3) # P/ OF
+height = cap.get(4) # P/ OF
 
 ret, prev = cap.read()
 prevgray = cv.cvtColor(prev, cv.COLOR_BGR2GRAY)
 
 while cv.waitKey(1) < 0:
-
     # Get frame from the video
     hasFrame, frame = cap.read()
     hasImghsv, imghsv = capDisparity.read()
 
     # Stop the program if reached end of video
     if not hasFrame or not hasImghsv:
-        print("Done processing !!!")
-        print("Output file is stored as ", outputFile)
+        print("Done processing! Output file is stored as {}".format(outputFile))
         cv.waitKey(3000)
         break
 
-    #P/ OF
+    # P/ OF
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     flow = cv.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
     prevgray = gray
-    #END P/ OF
+    # END P/ OF
 
     # Create a 4D blob from a frame.
     blob = cv.dnn.blobFromImage(frame, swapRB=True, crop=False)
