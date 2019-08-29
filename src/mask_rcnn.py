@@ -25,7 +25,8 @@ parser = argparse.ArgumentParser(description='Use this script to run '
                                              'and segmentation')
 parser.add_argument('--image', help='Path to image file')
 parser.add_argument('--video', help='Path to video file.')
-parser.add_argument('--kitti', help='To use kitti images.', default=True)
+parser.add_argument('--kitti', help='To use kitti images.', default=False)
+parser.add_argument('--disparity', help='Path to disparity map video file.')
 args = parser.parse_args()
 
 # Download and extract weight files from Mask-RCNN on Coco
@@ -61,8 +62,8 @@ elif (args.video):
 
     cap = cv.VideoCapture(args.video)
     outputFile = OUTPUT_PATH + args.video[:-4] + '.avi'
-elif (args.kitty):
-    # Open kitti sample file
+elif (args.kitti):
+    # ipen kitti sample file
     if not os.path.isfile(args.kitti):
         print("Input kitti file doesn't exist")
         sys.exit(1)
