@@ -8,6 +8,7 @@ import wget
 import tarfile
 
 from functions import Utils
+from kitti_generator import kitti_generator
 
 # Model Constants
 OUTPUT_PATH = 'mask_rcnn_output'
@@ -31,6 +32,7 @@ args = parser.parse_args()
 
 # Download and extract weight files from Mask-RCNN on Coco
 if (not os.path.exists(WEIGHTS_PATH)):
+    print('Downloading Mask-RCNN weights:')
     weights_file = wget.download(WEIGHTS_URL)
 
     tar = tarfile.open(weights_file)
@@ -63,21 +65,28 @@ elif (args.video):
     cap = cv.VideoCapture(args.video)
     outputFile = OUTPUT_PATH + args.video[:-4] + '.avi'
 elif (args.kitti):
-    # ipen kitti sample file
+    # Open kitti sample file
     if not os.path.isfile(args.kitti):
         print("Input kitti file doesn't exist")
         sys.exit(1)
 
-    cap = cv.VideoCapture('KITTI_Germany/City/City/2011_09_26_6/'
-                          'image_02/data/%10d.png')
+    cap = kitti_generator()
+    # cap = cv.VideoCapture('KITTI_Germany/City/City/2011_09_26_6/'
+    #                       'image_02/data/%10d.png')
     outputFile = OUTPUT_PATH + '.avi'
 else:
-    cap = cv.VideoCapture(0)  # Internal Camera input
+    cap = cv.VideoCapture('nvcamerasrc ! video/x-raw(memory:NVMM), '
+                          'width=(int)1280, height=(int)720, '
+                          'format=(string)I420, framerate=(fraction)24/1 '
+                          '! nvvidconv flip-method=6 ! video/x-raw, '
+                          'format=(string)I420 ! videoconvert ! '
+                          'video/x-raw, format=(string)BGR ! appsink')
+    # cap = cv.VideoCapture(0)  # Internal Camera input
 
     outputFile = OUTPUT_PATH + '.avi'
 
     # Get disparitymap frames (or video) input
-    capDisparity = cv.VideoCapture(args.disparity or DISPARITY_PATH)
+    # capDisparity = cv.VideoCapture(args.disparity or DISPARITY_PATH)
 
 # Get the video writer initialized to save the output video
 if (not args.image):
@@ -98,16 +107,18 @@ processor = Utils()
 while cv.waitKey(1) < 0:
     # Get frame from the video
     hasFrame, frame = cap.read()
-    hasImghsv, imghsv = capDisparity.read()
+    disparity_image = None
+    # hasImghsv, imghsv = capDisparity.read()
 
     # Stop the program if reached end of video
-    if not hasFrame or not hasImghsv:
+    if not hasFrame:
         print("Done processing! Output is stored as {}".format(outputFile))
         cv.waitKey(3000)
-        break
+        blob.shape
 
     # Optical Flow calculation
     # P / OF
+    print('Calculating Optical Flow based on the previous frame...')
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
     flow = cv.calcOpticalFlowFarneback(prevgray, gray, None,
                                        0.5, 3, 15, 3, 5, 1.2, 0)
@@ -117,14 +128,17 @@ while cv.waitKey(1) < 0:
     # Create a 4D blob from a frame
     blob = cv.dnn.blobFromImage(frame, swapRB=True, crop=False)
 
+    print(blob.shape)
+
     # Set the input to the network
     net.setInput(blob)
 
     # Run the forward pass to get output from the output layers
+    print('Running forward pass to given frame...')
     boxes, masks = net.forward(['detection_out_final', 'detection_masks'])
 
     # Extract the bounding box and mask for each of the detected objects
-    processor.extract_segments(frame, boxes, masks, imghsv, flow, gray)
+    processor.extract_segments(frame, boxes, masks, disparity_image, flow, gray)
 
     # Put efficiency information.
     t, _ = net.getPerfProfile()

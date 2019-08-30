@@ -76,15 +76,15 @@ class Utils():
         # Draw mask with Dispatry values
         selected_frame = frame[top:bottom+1, left:right+1][mask]
         selected_hsv = imghsv[top:bottom+1, left:right+1][mask]
-        modified_frame = cv.addWeighted(selected_frame, 0.3,
-                                        selected_hsv, 0.7, 0)
+        # modified_frame = cv.addWeighted(selected_frame, 0.3,
+        #                                 selected_hsv, 0.7, 0)
 
-        frame[top:bottom + 1, left:right + 1][mask] = modified_frame
+        # frame[top:bottom + 1, left:right + 1][mask] = modified_frame
 
         # --------------------------------------------- #
         # ------ Disparity Map Average Intensity ------ #
         # --------------------------------------------- #
-        grayRoi = cv.cvtColor(imghsv, cv.COLOR_BGR2GRAY)
+        # grayRoi = cv.cvtColor(imghsv, cv.COLOR_BGR2GRAY)
 
         # Contours on the image
         mask = mask.astype(np.uint8)
@@ -104,7 +104,8 @@ class Utils():
         for i in range(mask.shape[0]):
             for j in range(mask.shape[1]):
                 if raw_dist[i, j] >= 0:
-                    intensity = grayRoi[top + i, left + j]
+                    # intensity = grayRoi[top + i, left + j]
+                    intensity = 0
                     veCount = veCount + 1
                     intensityCount = intensityCount + intensity
 
@@ -161,8 +162,10 @@ class Utils():
         '''
         numDetections = boxes.shape[2]
 
-        frameH = imghsv.shape[0]
-        frameW = imghsv.shape[1]
+        # frameH = imghsv.shape[0]
+        # frameW = imghsv.shape[1]
+        frameH = frame.shape[0]
+        frameW = frame.shape[1]
 
         for i in range(numDetections):
             box = boxes[0, 0, i]
