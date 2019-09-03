@@ -1,4 +1,5 @@
 import cv2 as cv
+import tensorflow as tf
 import argparse
 import numpy as np
 import os.path
@@ -40,9 +41,14 @@ if (not os.path.exists(WEIGHTS_PATH)):
 
 
 # Load the network from Tensorflow Model
-net = cv.dnn.readNetFromTensorflow(WEIGHTS_PATH, TF_WEIGHTS_GRAPH_PATH)
-net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
-net.setPreferableTarget(cv.dnn.DNN_TARGET_OPENCL)
+print('[INFO] Loading model graph from {}'.format(WEIGHTS_PATH))
+with tf.gfile.FastGFile(WEIGHTS_PATH, 'rb') as file:
+    network_graph = tf.GraphDef()
+    network_graph.ParseFromString(file.read())
+
+#net = cv.dnn.readNetFromTensorflow(WEIGHTS_PATH, TF_WEIGHTS_GRAPH_PATH)
+#net.setPreferableBackend(cv.dnn.DNN_BACKEND_OPENCV)
+#net.setPreferableTarget(cv.dnn.DNN_TARGET_OPENCL)
 
 
 # Setup the output view
@@ -104,52 +110,58 @@ prevgray = cv.cvtColor(prev, cv.COLOR_BGR2GRAY)
 
 processor = Utils()
 
-while cv.waitKey(1) < 0:
-    # Get frame from the video
-    hasFrame, frame = cap.read()
-    disparity_image = None
-    # hasImghsv, imghsv = capDisparity.read()
+with tf.Session() as session:
+    # Restore session
+    session.graph.as_default()
+    tf.import_graph_def(network_graph, name='')
 
-    # Stop the program if reached end of video
-    if not hasFrame:
-        print("Done processing! Output is stored as {}".format(outputFile))
-        cv.waitKey(3000)
-        blob.shape
+    while cv.waitKey(1) < 0:
+        # Get frame from the video
+        hasFrame, frame = cap.read()
+        disparity_image = None
+        # hasImghsv, imghsv = capDisparity.read()
 
-    # Optical Flow calculation
-    # P / OF
-    print('Calculating Optical Flow based on the previous frame...')
-    gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    flow = cv.calcOpticalFlowFarneback(prevgray, gray, None,
-                                       0.5, 3, 15, 3, 5, 1.2, 0)
-    prevgray = gray
-    # END P/ OF
+        # Stop the program if reached end of video
+        if not hasFrame:
+            print("Done processing! Output is stored as {}".format(outputFile))
+            cv.waitKey(3000)
 
-    # Create a 4D blob from a frame
-    blob = cv.dnn.blobFromImage(frame, swapRB=True, crop=False)
+        # Optical Flow calculation
+        # P / OF
+        print('[INFO] Calculating Optical Flow based on the previous frame...')
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        flow = cv.calcOpticalFlowFarneback(prevgray, gray, None, 
+                                           0.5, 3, 15, 3, 5, 1.2, 0)
+        prevgray = gray
+        # END P/ OF
 
-    print(blob.shape)
+        # Create a 4D blob from a frame
+        blob = cv.dnn.blobFromImage(frame, swapRB=True, crop=False)
 
-    # Set the input to the network
-    net.setInput(blob)
+        print(blob.shape)
 
-    # Run the forward pass to get output from the output layers
-    print('Running forward pass to given frame...')
-    boxes, masks = net.forward(['detection_out_final', 'detection_masks'])
+        # Set the input to the network
+        #net.setInput(blob)
 
-    # Extract the bounding box and mask for each of the detected objects
-    processor.extract_segments(frame, boxes, masks, disparity_image, flow, gray)
+        # Run the forward pass to get output from the output layers
+        print('[INFO] Running forward pass to given frame...')
+        session.run([session.graph.get_tensor_by_name('num_detections:0')],
+                    feed_dict={'image_tensor:0': blob.reshape(1, 720, 1280, 3)})
+        #boxes, masks = net.forward(['detection_out_final', 'detection_masks'])
 
-    # Put efficiency information.
-    t, _ = net.getPerfProfile()
+        # Extract the bounding box and mask for each of the detected objects
+        processor.extract_segments(frame, boxes, masks, disparity_image, flow, gray)
 
-    print('[INFO] Mask-RCNN on Jetson TX2. Inference time: '
-          '%0.0f ms' % abs(t * 1000.0 / cv.getTickFrequency()))
+        # Put efficiency information.
+        t, _ = net.getPerfProfile()
 
-    # Write the frame with the detection boxes
-    if (args.image):
-        cv.imwrite(outputFile, frame.astype(np.uint8))
-    else:
-        vid_writer.write(frame.astype(np.uint8))
+        print('[INFO] Mask-RCNN on Jetson TX2. Inference time: '
+              '%0.0f ms' % abs(t * 1000.0 / cv.getTickFrequency()))
 
-    cv.imshow('Extracted Features', frame)
+        # Write the frame with the detection boxes
+        if (args.image):
+            cv.imwrite(outputFile, frame.astype(np.uint8))
+        else:
+            vid_writer.write(frame.astype(np.uint8))
+
+        cv.imshow('Extracted Features', frame)
