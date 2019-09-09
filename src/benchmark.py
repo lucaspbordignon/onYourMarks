@@ -26,7 +26,7 @@ class Benchmark():
 
             for image in self._data:
                 image_path = self._data_base_path + image
-                image_raw = tf.io.read_file(image_path)
+                image_raw = tf.read_file(image_path)
                 image_tensor = tf.image.decode_image(image_raw)
 
                 print('[DEBUG] Tensor shape:', image_tensor.shape)
