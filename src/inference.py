@@ -1,26 +1,51 @@
+import numpy as np
 import tensorflow as tf
 import os
 import wget
 import tarfile
+import matplotlib.pyplot as plt
 
-from models import graph_path
+from models import graph_path, tensors
+from timer import Timer
 
 
 class Model():
     def __init__(self, name, url):
         self._name = name
         self._url = url
+        self._session = None
+        self._timer = Timer(name)
 
         self.setup()
 
+    def __del__(self):
+        if (self._session):
+            self._session.close()
+
     def run(self, image):
-        print('[INFO] Will execute inference for {}'.format(self._name))
+        print('[INFO] Executing inference for {}'.format(self._name))
+
+        input_tensor_name = tensors[self._name]['input']
+        expanded_image = np.expand_dims(image, 0)
+
+        self._timer.start()
+        output = self._session.run(tensors[self._name]['output'],
+                                   feed_dict={
+                                       input_tensor_name: expanded_image
+                                   })
+        self._timer.end()
+
+        print('[DEBUG] Forward pass finished! Predictions count:' +
+              ' {}, elapsed time: {}'.format(output[1],
+                                             self._timer.checkpoint['elapsed'])
+              )
 
     def setup(self):
         '''
             Setup Tensorflow session to execute a given model. The steps
             for setup are:
                 - Download and extract pretrained models;
+                - Setup the Session used during inference;
         '''
         print('[INFO] Creating session with model {}'.format(self._name))
 
@@ -44,3 +69,11 @@ class Model():
 
         self._session = tf.Session(graph=final_graph)
         print('\n[INFO] Graph for {} loaded'.format(self._name))
+
+    def show(self, image_data):
+        plt.imshow(image_data)
+        plt.show()
+
+    @property
+    def graph(self):
+        return self._session.graph
