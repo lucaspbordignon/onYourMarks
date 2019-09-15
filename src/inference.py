@@ -5,6 +5,8 @@ import wget
 import tarfile
 import matplotlib.pyplot as plt
 
+from skimage.transform import rescale
+
 from models import graph_path, tensors
 from timer import Timer
 
@@ -26,6 +28,8 @@ class Model():
         print('[INFO] Executing inference for {}'.format(self._name))
 
         input_tensor_name = tensors[self._name]['input']
+        # TODO: Must resize to (?, 416, 416, 3), in order to work
+        # with YOLOv3 model.
         expanded_image = np.expand_dims(image, 0)
 
         self._timer.start()
@@ -77,3 +81,7 @@ class Model():
     @property
     def graph(self):
         return self._session.graph
+
+    @property
+    def timer(self):
+        return self._timer.checkpoints

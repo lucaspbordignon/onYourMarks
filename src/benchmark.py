@@ -24,7 +24,7 @@ class Benchmark():
         for name, url in paths.items():
             model = Model(name, url)
 
-            for image in self._data:
+            for image in self._data[0:20]:
                 image_path = self._data_base_path + image
                 image_raw = tf.read_file(image_path)
                 image_tensor = tf.image.decode_image(image_raw)
@@ -32,6 +32,7 @@ class Benchmark():
                 print('[DEBUG] Tensor shape:', image_tensor.shape)
 
                 model.run(np.array(image_tensor.numpy()))
+            print(model.timer)
 
     def download_dataset(self, name):
         ''' Downloads the given dataset for benchmark '''
