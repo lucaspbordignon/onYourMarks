@@ -13,7 +13,7 @@ class Benchmark():
     _data = []
     _data_base_path = '../data/'
 
-    def __init__(self, dataset='coco'):
+    def __init__(self, dataset='kitti'):
         tf.enable_eager_execution()
 
         self.download_dataset(dataset)
@@ -32,7 +32,6 @@ class Benchmark():
                 print('[DEBUG] Tensor shape:', image_tensor.shape)
 
                 model.run(np.array(image_tensor.numpy()))
-            print(model.timer)
 
     def download_dataset(self, name):
         ''' Downloads the given dataset for benchmark '''
@@ -55,6 +54,24 @@ class Benchmark():
                     os.remove('{}.zip'.format(filename))
 
             self._data_base_path = '../data/coco/'
+            self._data = os.listdir(self._data_base_path)
+        if (name == 'kitti'):
+            if (not os.path.exists('../data/kitti')):
+                print('[INFO] Downloading Kitti Stereo Vision dataset:')
+
+                url = 'https://s3.eu-central-1.amazonaws.com/avg-kitti/' \
+                      'data_scene_flow.zip'
+                compressed_data = wget.download(url)
+
+                with ZipFile(compressed_data, 'r') as file:
+                    filename = 'data_scene_flow'
+
+                    file.extractall('../data/')
+                    os.rename('../data/{}'.format(filename),
+                              '../data/{}'.format(name))
+                    os.remove('{}.zip'.format(filename))
+
+            self._data_base_path = '../data/kitti/testing/image_2/'
             self._data = os.listdir(self._data_base_path)
         print('[INFO] Images dataset loaded')
 
