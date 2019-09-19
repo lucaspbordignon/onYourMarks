@@ -29,8 +29,6 @@ class Benchmark():
                 image_raw = tf.read_file(image_path)
                 image_tensor = tf.image.decode_image(image_raw)
 
-                print('[DEBUG] Tensor shape:', image_tensor.shape)
-
                 model.run(np.array(image_tensor.numpy()))
 
     def download_dataset(self, name):

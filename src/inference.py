@@ -5,10 +5,9 @@ import wget
 import tarfile
 import matplotlib.pyplot as plt
 
-from skimage.transform import rescale
-
 from models import graph_path, tensors
 from timer import Timer
+from utils import resize
 
 
 class Model():
@@ -28,9 +27,10 @@ class Model():
         print('[INFO] Executing inference for {}'.format(self._name))
 
         input_tensor_name = tensors[self._name]['input']
-        # TODO: Must resize to (?, 416, 416, 3), in order to work
-        # with YOLOv3 model.
-        expanded_image = np.expand_dims(image, 0)
+
+        expanded_image = np.expand_dims(resize(image), 0)
+
+        print('[INFO] Input Image shape:', expanded_image.shape)
 
         self._timer.start()
         output = self._session.run(tensors[self._name]['output'],
@@ -72,7 +72,7 @@ class Model():
             final_graph = tf.import_graph_def(graph_def, name="")
 
         self._session = tf.Session(graph=final_graph)
-        print('\n[INFO] Graph for {} loaded'.format(self._name))
+        print('[INFO] Graph for {} loaded'.format(self._name))
 
     def show(self, image_data):
         plt.imshow(image_data)

@@ -67,7 +67,11 @@ tensors = {
     'yolo_v3_coco': {
         'input': 'Placeholder:0',
         'output': [
-            'yolo_v3_model/non_max_suppression_79/NonMaxSuppressionV3',
+            'yolo_v3_model/non_max_suppression/iou_threshold',
+            'yolo_v3_model/non_max_suppression/score_threshold',
+            'yolo_v3_model/non_max_suppression/NonMaxSuppressionV3' +
+            '/max_output_size',
+            'yolo_v3_model/non_max_suppression/NonMaxSuppressionV3'
         ],
     },
 }
