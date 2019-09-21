@@ -36,7 +36,8 @@ class Model():
 
         input_tensor_name = tensors[self._name]['input']
 
-        expanded_image = np.expand_dims(resize(image), 0)
+        resized_image = resize(image)
+        expanded_image = np.expand_dims(resized_image, 0)
 
         print('[INFO] Input Image shape:', expanded_image.shape)
 
@@ -47,9 +48,14 @@ class Model():
                                    })
         self._statistics.end()
 
+        predictions_count = output[1]
+
+        if (type(predictions_count) is np.ndarray):
+            predictions_count = len(predictions_count)
+
         print('[DEBUG] Forward pass finished! Predictions count:' +
               ' {}, elapsed time: {}'.format(
-                  output[1],
+                  predictions_count,
                   self._statistics.timer.checkpoint['elapsed']))
 
     def setup(self):
