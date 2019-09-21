@@ -6,16 +6,20 @@ import tarfile
 import matplotlib.pyplot as plt
 
 from networks import graph_path, tensors
-from timer import Timer
+from statistics import Statistics
 from utils import resize
 
 
 class Model():
+    '''
+        Represents a deep learning model, loading it's weights, graphs and
+        collecting every metric which refers to it.
+    '''
     def __init__(self, name, url):
         self._name = name
         self._url = url
         self._session = None
-        self._timer = Timer(name)
+        self._statistics = Statistics(name)
 
         self.setup()
 
@@ -24,6 +28,10 @@ class Model():
             self._session.close()
 
     def run(self, image):
+        '''
+            Pre-process images and execute the inference for given model,
+            collecting statistics for future analytics
+        '''
         print('[INFO] Executing inference for {}'.format(self._name))
 
         input_tensor_name = tensors[self._name]['input']
@@ -32,17 +40,17 @@ class Model():
 
         print('[INFO] Input Image shape:', expanded_image.shape)
 
-        self._timer.start()
+        self._statistics.start()
         output = self._session.run(tensors[self._name]['output'],
                                    feed_dict={
                                        input_tensor_name: expanded_image
                                    })
-        self._timer.end()
+        self._statistics.end()
 
         print('[DEBUG] Forward pass finished! Predictions count:' +
-              ' {}, elapsed time: {}'.format(output[1],
-                                             self._timer.checkpoint['elapsed'])
-              )
+              ' {}, elapsed time: {}'.format(
+                  output[1],
+                  self._statistics.timer.checkpoint['elapsed']))
 
     def setup(self):
         '''
@@ -84,4 +92,4 @@ class Model():
 
     @property
     def timer(self):
-        return self._timer.checkpoints
+        return self._statistics.timer.checkpoints
