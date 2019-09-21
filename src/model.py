@@ -5,7 +5,7 @@ import wget
 import tarfile
 import matplotlib.pyplot as plt
 
-from models import graph_path, tensors
+from networks import graph_path, tensors
 from timer import Timer
 from utils import resize
 

@@ -5,8 +5,8 @@ import wget
 
 from zipfile import ZipFile
 
-from inference import Model
-from models import paths
+from model import Model
+from networks import paths
 
 
 class Benchmark():
