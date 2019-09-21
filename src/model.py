@@ -82,6 +82,10 @@ class Model():
         self._session = tf.Session(graph=final_graph)
         print('[INFO] Graph for {} loaded'.format(self._name))
 
+    def export(self):
+        ''' Export collected statistics to /statistics/name.csv file '''
+        self._statistics.export(base_path='../statistics/')
+
     def show(self, image_data):
         plt.imshow(image_data)
         plt.show()

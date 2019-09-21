@@ -31,6 +31,8 @@ class Benchmark():
 
                 model.run(np.array(image_tensor.numpy()))
 
+            model.export()
+
     def download_dataset(self, name):
         ''' Downloads the given dataset for benchmark '''
 

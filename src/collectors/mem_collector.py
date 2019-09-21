@@ -45,3 +45,7 @@ class MemCollector():
     @property
     def checkpoints(self):
         return self._checkpoints
+
+    @property
+    def fields(self):
+        return ['percentage', 'process_total', 'ram_total']

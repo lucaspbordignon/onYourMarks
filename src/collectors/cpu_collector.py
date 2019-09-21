@@ -1,3 +1,7 @@
+import platform
+import psutil
+
+
 class CPUCollector():
     '''
         Class used to measure CPU performance of the tested models. It stores
@@ -8,3 +12,31 @@ class CPUCollector():
         self._name = name
         self._checkpoints = []
         self._current = 0
+
+    def collect(self):
+        if (platform.system() == 'Linux'):
+            self.update_checkpoint({
+                'temperature': psutil.sensors_temperatures(),
+            }, override=True)
+
+        self._current += 1
+
+    def update_checkpoint(self, data, override=False):
+        if (override):
+            self._checkpoints.append(data)
+
+        current_data = self.checkpoint
+
+        self._checkpoints[self._current - 1] = {**current_data, **data}
+
+    @property
+    def checkpoint(self):
+        return self._checkpoints[self._current - 1]
+
+    @property
+    def checkpoints(self):
+        return self._checkpoints
+
+    @property
+    def fields(self):
+        return ['temperature']

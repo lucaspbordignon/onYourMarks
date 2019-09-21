@@ -47,3 +47,7 @@ class Timer():
     @property
     def checkpoints(self):
         return self._checkpoints
+
+    @property
+    def fields(self):
+        return ['started_formatted', 'started', 'ended', 'elapsed']
