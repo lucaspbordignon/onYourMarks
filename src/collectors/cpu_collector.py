@@ -15,8 +15,11 @@ class CPUCollector():
 
     def collect(self):
         if (platform.system() == 'Linux'):
+            temperatures = psutil.sensors_temperatures()
+
             self.update_checkpoint({
-                'temperature': psutil.sensors_temperatures(),
+                'gpu_temperature': temperatures['GPU-therm'][0].current,
+                'cpu_temperature': temperatures['MCPU-therm'][0].current,
             }, override=True)
 
         self._current += 1
