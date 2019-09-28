@@ -48,4 +48,9 @@ class MemCollector():
 
     @property
     def fields(self):
-        return ['percentage', 'process_total', 'ram_total']
+        fields = ['percentage', 'process_total', 'ram_total']
+
+        if (platform.system() == 'Linux'):
+            fields.append('swap_total')
+
+        return fields

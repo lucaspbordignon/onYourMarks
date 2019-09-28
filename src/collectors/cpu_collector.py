@@ -42,4 +42,4 @@ class CPUCollector():
 
     @property
     def fields(self):
-        return ['temperature']
+        return ['gpu_temperature', 'cpu_temperature']
