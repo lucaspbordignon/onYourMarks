@@ -24,7 +24,7 @@ class Benchmark():
         for name, url in paths.items():
             model = Model(name, url)
 
-            for image in self._data[0:20]:
+            for image in self._data:
                 image_path = self._data_base_path + image
                 image_raw = tf.read_file(image_path)
                 image_tensor = tf.image.decode_image(image_raw)
