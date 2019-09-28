@@ -13,7 +13,7 @@ class Benchmark():
     _data = []
     _data_base_path = '../data/'
 
-    def __init__(self, dataset='kitti'):
+    def __init__(self, dataset='coco'):
         tf.enable_eager_execution()
 
         self.download_dataset(dataset)

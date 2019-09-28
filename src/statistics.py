@@ -1,6 +1,7 @@
 import csv
 from timer import Timer
 from collectors.cpu_collector import CPUCollector
+from collectors.fps_collector import FPSCollector
 from collectors.mem_collector import MemCollector
 
 
@@ -10,16 +11,20 @@ class Statistics():
         self._collectors = {
             'timer': Timer(model_name),
             'cpu': CPUCollector(model_name),
-            'memory': MemCollector(model_name)
+            'memory': MemCollector(model_name),
+            'fps': FPSCollector(model_name)
         }
 
     def start(self):
         self._collectors['timer'].start()
 
-    def end(self):
+    def end(self, output=None):
         self._collectors['timer'].end()
         self._collectors['cpu'].collect()
         self._collectors['memory'].collect()
+
+        if (output):
+            self._collectors['fps'].collect(output)
 
     def export(self, base_path='./'):
         for metric in self._collectors:

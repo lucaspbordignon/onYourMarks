@@ -46,12 +46,14 @@ class Model():
                                    feed_dict={
                                        input_tensor_name: expanded_image
                                    })
-        self._statistics.end()
+        self._statistics.end(output=output)
 
         predictions_count = output[1]
 
-        if (type(predictions_count) is np.ndarray):
+        if (self._name == 'yolo_v3_coco'):
             predictions_count = len(predictions_count)
+        else:
+            predictions_count = predictions_count[0]
 
         print('[DEBUG] Forward pass finished! Predictions count:' +
               ' {}, elapsed time: {}'.format(
