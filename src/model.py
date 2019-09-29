@@ -36,8 +36,7 @@ class Model():
 
         input_tensor_name = tensors[self._name]['input']
 
-        resized_image = resize(image)
-        expanded_image = np.expand_dims(resized_image, 0)
+        expanded_image = self.preprocess(image)
 
         print('[INFO] Input Image shape:', expanded_image.shape)
 
@@ -89,6 +88,17 @@ class Model():
 
         self._session = tf.Session(graph=final_graph)
         print('[INFO] Graph for {} loaded'.format(self._name))
+
+    def preprocess(self, image):
+        ''' Preprocess image before the inference step '''
+        processed = image
+
+        if (np.average(processed) <= 1):
+            # Must convert [0-1] RGB images to [0-255]
+            processed *= 255
+
+        resized_image = resize(processed)
+        return np.expand_dims(resized_image, 0)
 
     def export(self):
         ''' Export collected statistics to /statistics/name.csv file '''
