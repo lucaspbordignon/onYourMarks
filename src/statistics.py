@@ -6,6 +6,15 @@ from collectors.mem_collector import MemCollector
 
 
 class Statistics():
+    '''
+        This class is responsible to collect data and checkpoints during
+    fast-forward steps of networks. It collects the following piece of
+    information:
+        - Time data: As elapsed time, inference time, etc.
+        - CPU/GPU data: As temperature for both CPU and GPU
+        - Memory data: As process usage, swap usage, etc.
+        - FPS data: As amount of images passed and predictions count
+    '''
     def __init__(self, model_name):
         self._name = model_name
         self._collectors = {
