@@ -25,3 +25,14 @@ The algorithm is responsible by downloading all the needed datasets
 and/or models already defined under the `src/networks.py` file. If
 you want to add your own custom models, generate a tensorflow frozen
 graph and host it under this file.
+
+## Troubleshooting
+
+**Tensorflow GPU:** To install a specific version of Tensorflow, if the
+jetpack installation failed by some reason, execute:
+
+```
+sudo pip3 install --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v$JP_VERSION tensorflow-gpu==$TF_VERSION+nv$NV_VERSION
+```
+Where `JP_VERSION` is the JetPack version of the specific tensorflow
+version needed.
