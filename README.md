@@ -1,5 +1,5 @@
 # onYourMarks
-A benchmark to help the decision making over the Nvidia's Jetson TX2 platform.
+A benchmark to help the decision making process over the Nvidia's Jetson TX2 platform.
 It's designed to serve as a general purpouse benchmark, being easily
 customizable for adding and adapting new models to the algorithm.
 
