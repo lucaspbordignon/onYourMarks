@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import os
 import wget
+import random
 
 from zipfile import ZipFile
 
@@ -13,7 +14,7 @@ class Benchmark():
     _data = []
     _data_base_path = '../data/'
 
-    def __init__(self, dataset='coco'):
+    def __init__(self, dataset='kitti'):
         tf.enable_eager_execution()
 
         self.download_dataset(dataset)
@@ -23,6 +24,8 @@ class Benchmark():
 
         for name, url in paths.items():
             model = Model(name, url)
+
+            random.shuffle(self._data)
 
             for image in self._data:
                 image_path = self._data_base_path + image

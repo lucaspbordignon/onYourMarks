@@ -4,6 +4,7 @@ import os
 import wget
 import tarfile
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 from networks import graph_path, tensors
 from statistics import Statistics
@@ -33,12 +34,11 @@ class Model():
             collecting statistics for future analytics
         '''
         print('[INFO] Executing inference for {}'.format(self._name))
+        print('[INFO] Input Image shape:', image.shape)
 
         input_tensor_name = tensors[self._name]['input']
 
         expanded_image = self.preprocess(image)
-
-        print('[INFO] Input Image shape:', expanded_image.shape)
 
         self._statistics.start()
         output = self._session.run(tensors[self._name]['output'],
@@ -46,6 +46,9 @@ class Model():
                                        input_tensor_name: expanded_image
                                    })
         self._statistics.end(output=output)
+
+        # Just to collect images
+        self.show_predictions(expanded_image[0], output[0][0])
 
         predictions_count = output[1]
 
@@ -107,6 +110,27 @@ class Model():
     def show(self, image_data):
         plt.imshow(image_data)
         plt.show()
+
+    def show_predictions(self, image_data, boxes):
+        height, width, _channels = image_data.shape
+        _, image_axis = plt.subplots(1)
+
+        plt.imshow(image_data)
+
+        for box in boxes:
+            ymin, xmin, ymax, xmax = box
+            left, right, top, bottom = (int(xmin * width), int(xmax * width),
+                                        int(ymin * height), int(ymax * height))
+
+            patch = patches.Rectangle((left, top), right - left, bottom - top,
+                                      linewidth=1, edgecolor='y',
+                                      facecolor='none')
+
+            image_axis.add_patch(patch)
+
+        plt.show(block=False)
+        plt.pause(4)
+        plt.close()
 
     @property
     def graph(self):
